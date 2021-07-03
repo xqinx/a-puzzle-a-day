@@ -1,7 +1,10 @@
 use puzzleday::{Board, Block};
 use std::cell::RefCell;
 
-fn solve_puzzle(board: &mut Board, blocks: &Vec<RefCell<Option<Block>>>) {
+fn solve_puzzle<F>(board: &mut Board, blocks: &Vec<RefCell<Option<Block>>>,
+                cb: &mut F)
+where F: FnMut(&Board)
+{
     let start_i: usize;
     let start_j: usize;
 
@@ -9,7 +12,7 @@ fn solve_puzzle(board: &mut Board, blocks: &Vec<RefCell<Option<Block>>>) {
     match board.first_vacant() {
         None => {
             // no more vacant cell, this is a valid solution
-            println!("solution: {}",board);
+            cb(board);
             return;
         }
         Some((i,j)) => {
@@ -38,7 +41,7 @@ fn solve_puzzle(board: &mut Board, blocks: &Vec<RefCell<Option<Block>>>) {
                         if start_j >= j_offset {
                             // if no conflict, use this block and try recursively
                             board.apply_block(&block, start_i, start_j-j_offset);
-                            solve_puzzle(board, blocks);
+                            solve_puzzle(board, blocks, cb);
                             // revert block from board after trying, move to the next orientation
                             board.revert_block(&block, start_i, start_j-j_offset);
                         }
@@ -55,7 +58,7 @@ fn solve_puzzle(board: &mut Board, blocks: &Vec<RefCell<Option<Block>>>) {
 }
 
 fn main() {
-    let mut board = Board::new(6,29);
+    let mut board = Board::new(7,3);
 
     println!("Today's board is {}", board);
 
@@ -77,5 +80,10 @@ fn main() {
         }
     }
 
-    solve_puzzle(&mut board, &blocks);
+    let mut total_solution = 0;
+    solve_puzzle(&mut board, &blocks, &mut |solution|{
+        total_solution+=1;
+        println!("Solution:{}",solution);
+    });
+    println!("number of solutions:{}",total_solution);
 }
